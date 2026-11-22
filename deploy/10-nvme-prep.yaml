@@ -1,0 +1,53 @@
+# Formats (only if blank) and mounts each GPU node's local NVMe at /mnt/nvme, then stays
+# running so the mount is restored after a node reboot. Never touches the OS or temp disks.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvme-prep
+  namespace: kube-system
+  labels: {app: nvme-prep, app.kubernetes.io/part-of: a100-hillclimb}
+spec:
+  selector:
+    matchLabels: {app: nvme-prep}
+  template:
+    metadata:
+      labels: {app: nvme-prep}
+    spec:
+      nodeSelector:
+        kubernetes.azure.com/accelerator: nvidia
+      priorityClassName: system-node-critical
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: prep
+          image: mcr.microsoft.com/cbl-mariner/busybox:2.0
+          securityContext:
+            privileged: true
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              chroot /host /bin/sh -c '
+                set -e
+                DEV=/dev/nvme0n1; MNT=/mnt/nvme
+                if [ ! -b "$DEV" ]; then echo "no $DEV"; exit 0; fi
+                if ! blkid "$DEV" >/dev/null 2>&1; then
+                  echo "formatting blank $DEV"; mkfs.ext4 -F -q -L nvmecache "$DEV"
+                fi
+                mkdir -p "$MNT"
+                mountpoint -q "$MNT" || mount -o noatime,discard "$DEV" "$MNT"
+                mkdir -p "$MNT/hf" "$MNT/cache" "$MNT/results"
+                chmod 1777 "$MNT/hf" "$MNT/cache" "$MNT/results"
+                echo "ready: $(df -h "$MNT" | tail -1)"
+              '
+              while true; do sleep 3600; done
+          volumeMounts:
+            - name: host
+              mountPath: /host
+              mountPropagation: Bidirectional
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+      volumes:
+        - name: host
+          hostPath: {path: /}

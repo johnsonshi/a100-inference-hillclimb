@@ -1,0 +1,226 @@
+{
+ "name": "main",
+ "stages": [
+  {
+   "id": "quality",
+   "type": "batch",
+   "plan": "quality",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "sglang",
+     "variant": "bf16",
+     "mem_fraction_static": 0.91
+    },
+    {
+     "engine": "sglang",
+     "variant": "int4",
+     "mem_fraction_static": 0.91
+    },
+    {
+     "engine": "sglang",
+     "variant": "int8w8a8",
+     "mem_fraction_static": 0.91
+    }
+   ]
+  },
+  {
+   "id": "t1-spec-check",
+   "type": "batch",
+   "plan": "t1s",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "ngram",
+     "spec_k": 4
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "suffix",
+     "spec_k": 4
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "vllm",
+     "variant": "bf16",
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "sglang",
+     "variant": "int4",
+     "mem_fraction_static": 0.91
+    },
+    {
+     "engine": "sglang",
+     "variant": "int4",
+     "mem_fraction_static": 0.91,
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "sglang",
+     "variant": "bf16",
+     "mem_fraction_static": 0.91,
+     "spec": "dflash2",
+     "spec_k": 8
+    }
+   ]
+  },
+  {
+   "id": "t2-variants",
+   "type": "batch",
+   "plan": "t2s",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "sglang",
+     "variant": "int4",
+     "mem_fraction_static": 0.91
+    },
+    {
+     "engine": "sglang",
+     "variant": "int8w8a8",
+     "mem_fraction_static": 0.91
+    },
+    {
+     "engine": "sglang",
+     "variant": "int4"
+    }
+   ]
+  },
+  {
+   "id": "climb-t1-vllm",
+   "type": "climb",
+   "track": "t1",
+   "max_trials": 50,
+   "start_from": {
+    "campaign_prefix": "main:t1-spec-check",
+    "metric": "t1_decode_tps",
+    "engine": "vllm"
+   },
+   "start": {
+    "engine": "vllm",
+    "variant": "int4"
+   },
+   "threshold": 0.03
+  },
+  {
+   "id": "climb-t2-vllm",
+   "type": "climb",
+   "track": "t2",
+   "max_trials": 50,
+   "start_from": {
+    "campaign_prefix": "main:t2-variants",
+    "metric": "t2_goodput_tps",
+    "engine": "vllm"
+   },
+   "start": {
+    "engine": "vllm",
+    "variant": "int8w8a8"
+   },
+   "threshold": 0.05
+  },
+  {
+   "id": "climb-t1-sglang",
+   "type": "climb",
+   "track": "t1",
+   "max_trials": 40,
+   "start_from": {
+    "campaign_prefix": "main:t1-spec-check",
+    "metric": "t1_decode_tps",
+    "engine": "sglang"
+   },
+   "start": {
+    "engine": "sglang",
+    "variant": "int4",
+    "mem_fraction_static": 0.91
+   },
+   "threshold": 0.03
+  },
+  {
+   "id": "climb-t2-sglang",
+   "type": "climb",
+   "track": "t2",
+   "max_trials": 40,
+   "start_from": {
+    "campaign_prefix": "main:t2-variants",
+    "metric": "t2_goodput_tps",
+    "engine": "sglang"
+   },
+   "start": {
+    "engine": "sglang",
+    "variant": "int4",
+    "mem_fraction_static": 0.91
+   },
+   "threshold": 0.05
+  }
+ ]
+}

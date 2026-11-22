@@ -1,0 +1,74 @@
+# In-cluster climb controller: drives trial pods with a namespaced service account (no AAD
+# tokens needed), keeps its ledger on node 0's NVMe so restarts resume where they left off.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hillclimb-controller
+  namespace: default
+  labels: {app.kubernetes.io/part-of: a100-hillclimb}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hillclimb-controller
+  namespace: default
+  labels: {app.kubernetes.io/part-of: a100-hillclimb}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hillclimb-controller
+  namespace: default
+  labels: {app.kubernetes.io/part-of: a100-hillclimb}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hillclimb-controller
+subjects:
+  - kind: ServiceAccount
+    name: hillclimb-controller
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hillclimb-controller
+  namespace: default
+  labels: {app: hillclimb-controller, app.kubernetes.io/part-of: a100-hillclimb}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: hillclimb-controller}
+  template:
+    metadata:
+      labels: {app: hillclimb-controller, app.kubernetes.io/part-of: a100-hillclimb}
+    spec:
+      serviceAccountName: hillclimb-controller
+      nodeSelector:
+        kubernetes.io/hostname: __CONTROLLER_NODE__
+      containers:
+        - name: controller
+          image: __REGISTRY__/hillclimb/controller:__TAG__
+          args: ["/campaigns/__CAMPAIGN__.json"]
+          env:
+            - {name: HILLCLIMB_REGISTRY, value: "__REGISTRY__"}
+            - {name: HILLCLIMB_LANES, value: "__LANES__"}
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {memory: 2Gi}
+          volumeMounts:
+            - {name: results, mountPath: /app/results}
+            - {name: campaigns, mountPath: /campaigns}
+      volumes:
+        - name: results
+          hostPath: {path: /mnt/nvme/hillclimb-controller/results, type: DirectoryOrCreate}
+        - name: campaigns
+          configMap: {name: hillclimb-campaigns}

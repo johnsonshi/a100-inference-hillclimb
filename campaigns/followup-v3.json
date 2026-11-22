@@ -1,0 +1,88 @@
+{
+ "name": "followup-v3",
+ "note": "Follow-up to main-v3 for the write-up: steady-state capacity of the BF16 defaults (so the headline compares sustained with sustained) and of the recommended 'both' config at vLLM's default cap of 256, two runs each (one per node) for a capacity noise floor. Rates are the configs' measured 120-s capacities: BF16 chat 1.7166 (baseline-t2c), BF16 synthetic 1.1308 (t2-screen, a reused harness-v2 run), and 3.9011 for W8A8 + FP8 KV at cap 256 (ablation-t2c-vllm), so the 'both' search runs the same rungs as steady-t2c-cap256. Added after the first stage: one-user speed (plan t1n) of the 'both' config at the default cap and of INT4 + suffix k=4 with the same draft schedule, and 2-minute chat searches of the 'both' config at the default cap (lane n0, where the chat config measured 3.831) and of W8A8 + BF16 KV on FlashInfer attention (lane n1, where W8A8 on FlashAttention-2 measured 3.2719), which separates the FP8 KV cache's gain from vLLM's switch to FlashInfer.",
+ "stages": [
+  {
+   "id": "steady-defaults-chat",
+   "type": "verify",
+   "plan": "t2css@1.7166",
+   "repeat": 2,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    }
+   ]
+  },
+  {
+   "id": "one-user-cap256",
+   "type": "verify",
+   "plan": "t1n",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8",
+     "spec": "suffix",
+     "spec_k": 4,
+     "spec_schedule": "cutoff"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "suffix",
+     "spec_k": 4,
+     "spec_schedule": "cutoff"
+    }
+   ]
+  },
+  {
+   "id": "chat-2min",
+   "type": "verify",
+   "plan": "t2c",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8",
+     "spec": "suffix",
+     "spec_k": 4,
+     "spec_schedule": "cutoff"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "attention_backend": "FLASHINFER"
+    }
+   ]
+  },
+  {
+   "id": "steady-both-cap256",
+   "type": "verify",
+   "plan": "t2css@3.9011",
+   "repeat": 2,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8",
+     "spec": "suffix",
+     "spec_k": 4,
+     "spec_schedule": "cutoff"
+    }
+   ]
+  },
+  {
+   "id": "steady-defaults-synthetic",
+   "type": "verify",
+   "plan": "t2ss@1.1308",
+   "repeat": 2,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    }
+   ]
+  }
+ ]
+}

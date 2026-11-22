@@ -1,0 +1,10 @@
+results/
+.git/
+blog/
+docs/
+*.pyc
+__pycache__/
+results-cluster/
+tests/
+research/
+.env

@@ -1,0 +1,58 @@
+# Builds a data-free INT8 W8A8 (per-channel weights, dynamic per-token activations) checkpoint of
+# Nanbeige4.3-33B with llm-compressor, on the node's GPU, into the node-local model cache.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: build-w8a8-__IDX__
+  namespace: default
+  labels: {app: build-w8a8, app.kubernetes.io/part-of: a100-hillclimb}
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels: {app: build-w8a8}
+    spec:
+      restartPolicy: Never
+      nodeSelector: {kubernetes.io/hostname: __NODE__}
+      containers:
+        - name: quantize
+          image: __REGISTRY__/vllm/vllm-openai:v0.34.0
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              OUT=/models/Nanbeige4.3-33B-W8A8-INT8
+              if [ -f "$OUT/DONE" ]; then echo "already built"; exit 0; fi
+              pip install --quiet "llmcompressor" 2>&1 | tail -2
+              python3 - <<'PY'
+              import json, os, shutil, time
+              import torch
+              from transformers import AutoModelForCausalLM, AutoTokenizer
+              from llmcompressor import oneshot
+              from llmcompressor.modifiers.quantization import QuantizationModifier
+              SRC, OUT = "/models/Nanbeige4.3-33B", "/models/Nanbeige4.3-33B-W8A8-INT8"
+              t = time.time()
+              model = AutoModelForCausalLM.from_pretrained(SRC, torch_dtype=torch.bfloat16, device_map="cuda")
+              tok = AutoTokenizer.from_pretrained(SRC)
+              oneshot(model=model, recipe=QuantizationModifier(targets="Linear", scheme="W8A8", ignore=["lm_head"]))
+              model.save_pretrained(OUT, save_compressed=True)
+              tok.save_pretrained(OUT)
+              for f in ("generation_config.json", "chat_template.jinja", "tokenizer.model", "added_tokens.json"):
+                  if os.path.exists(os.path.join(SRC, f)) and not os.path.exists(os.path.join(OUT, f)):
+                      shutil.copy(os.path.join(SRC, f), OUT)
+              qc = json.load(open(os.path.join(OUT, "config.json"))).get("quantization_config", {})
+              print("quant_method:", qc.get("quant_method"), "| groups:", json.dumps(qc.get("config_groups"))[:400])
+              print(f"built in {time.time()-t:.0f}s")
+              open(os.path.join(OUT, "DONE"), "w").write("ok")
+              PY
+              du -sh /models/Nanbeige4.3-33B-W8A8-INT8
+          resources:
+            requests: {cpu: "6", memory: 96Gi, nvidia.com/gpu: "1"}
+            limits: {memory: 180Gi, nvidia.com/gpu: "1"}
+          volumeMounts:
+            - {name: models, mountPath: /models}
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - {name: models, hostPath: {path: /mnt/nvme/hf, type: Directory}}
+        - {name: dshm, emptyDir: {medium: Memory, sizeLimit: 16Gi}}

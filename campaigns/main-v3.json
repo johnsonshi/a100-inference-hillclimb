@@ -1,0 +1,710 @@
+{
+ "name": "main-v3",
+ "note": "Harness v3: every book-learnings fix; supersedes campaign main (v1/v2).",
+ "reuse_from": {
+  "campaigns": [
+   "main"
+  ],
+  "plan_families": [
+   "t2s",
+   "t2probe"
+  ]
+ },
+ "stages": [
+  {
+   "id": "quality2-refs",
+   "type": "batch",
+   "plan": "quality2-refs",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    }
+   ],
+   "reuse": true
+  },
+  {
+   "id": "quality2",
+   "type": "batch",
+   "plan": "quality2",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "ngram"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "bf16"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8_e4m3"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    }
+   ],
+   "reuse": true
+  },
+  {
+   "id": "t1-screen",
+   "type": "batch",
+   "plan": "t1n",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "ngram"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4",
+     "spec": "ngram"
+    }
+   ],
+   "reuse": true
+  },
+  {
+   "id": "t2-screen",
+   "type": "batch",
+   "plan": "t2s",
+   "reuse": true,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8_e4m3"
+    }
+   ]
+  },
+  {
+   "id": "t2c-screen",
+   "type": "batch",
+   "plan": "t2c",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8",
+     "spec": "suffix",
+     "spec_k": 6
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8",
+     "spec": "suffix",
+     "spec_k": 6,
+     "spec_schedule": "cutoff"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int8w8a8"
+    },
+    {
+     "engine": "sglang",
+     "mem_fraction_static": 0.91,
+     "variant": "int4",
+     "spec": "dflash2",
+     "spec_k": 8
+    }
+   ],
+   "reuse": true
+  },
+  {
+   "id": "climb-t1n-vllm",
+   "type": "climb",
+   "track": "t1n",
+   "max_trials": 60,
+   "threshold": 0.01,
+   "calibrate": true,
+   "start_from": {
+    "campaign_prefix": "main-v3:t1-screen",
+    "metric": "t1_decode_tps",
+    "engine": "vllm"
+   },
+   "start": {
+    "engine": "vllm",
+    "variant": "int4",
+    "spec": "suffix",
+    "spec_k": 6
+   }
+  },
+  {
+   "id": "climb-t1n-sglang",
+   "type": "climb",
+   "track": "t1n",
+   "max_trials": 40,
+   "threshold": 0.01,
+   "calibrate": true,
+   "start_from": {
+    "campaign_prefix": "main-v3:t1-screen",
+    "metric": "t1_decode_tps",
+    "engine": "sglang"
+   },
+   "start": {
+    "engine": "sglang",
+    "mem_fraction_static": 0.91,
+    "variant": "int4",
+    "spec": "dflash2",
+    "spec_k": 8
+   }
+  },
+  {
+   "id": "climb-t2-vllm",
+   "type": "climb",
+   "track": "t2",
+   "max_trials": 60,
+   "threshold": 0.05,
+   "start_from": {
+    "campaign_prefix": "main-v3:t2-screen",
+    "metric": "t2_capacity",
+    "engine": "vllm"
+   },
+   "start": {
+    "engine": "vllm",
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t2-sglang",
+   "type": "climb",
+   "track": "t2",
+   "max_trials": 40,
+   "threshold": 0.05,
+   "start_from": {
+    "campaign_prefix": "main-v3:t2-screen",
+    "metric": "t2_capacity",
+    "engine": "sglang"
+   },
+   "start": {
+    "engine": "sglang",
+    "mem_fraction_static": 0.91,
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t2c-vllm",
+   "type": "climb",
+   "track": "t2c",
+   "max_trials": 50,
+   "threshold": 0.05,
+   "start_from": {
+    "campaign_prefix": "main-v3:t2c-screen",
+    "metric": "t2_capacity",
+    "engine": "vllm"
+   },
+   "start": {
+    "engine": "vllm",
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t2c-sglang",
+   "type": "climb",
+   "track": "t2c",
+   "max_trials": 50,
+   "threshold": 0.05,
+   "start_from": {
+    "campaign_prefix": "main-v3:t2c-screen",
+    "metric": "t2_capacity",
+    "engine": "sglang"
+   },
+   "start": {
+    "engine": "sglang",
+    "mem_fraction_static": 0.91,
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t3-vllm",
+   "type": "climb",
+   "track": "t3",
+   "max_trials": 45,
+   "threshold": 0.05,
+   "calibrate": true,
+   "start_from_climb": "climb-t2-vllm",
+   "start": {
+    "engine": "vllm",
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t3-sglang",
+   "type": "climb",
+   "track": "t3",
+   "max_trials": 40,
+   "threshold": 0.05,
+   "calibrate": true,
+   "start_from_climb": "climb-t2-sglang",
+   "start": {
+    "engine": "sglang",
+    "mem_fraction_static": 0.91,
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "climb-t3-vllm-offload",
+   "type": "climb",
+   "track": "t3",
+   "max_trials": 24,
+   "threshold": 0.05,
+   "calibrate": true,
+   "start_from_climb": "climb-t3-vllm",
+   "start": {
+    "engine": "vllm",
+    "variant": "int8w8a8"
+   }
+  },
+  {
+   "id": "verify-t1",
+   "type": "verify",
+   "plan": "t1v",
+   "repeat": 2,
+   "from_climbs": [
+    "climb-t1n-vllm",
+    "climb-t1n-sglang"
+   ],
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    }
+   ]
+  },
+  {
+   "id": "verify-t2",
+   "type": "verify",
+   "plan": "t2v@capacity",
+   "repeat": 2,
+   "from_climbs": [
+    "climb-t2-vllm",
+    "climb-t2-sglang"
+   ]
+  },
+  {
+   "id": "verify-t2-mixed",
+   "type": "verify",
+   "plan": "t2m",
+   "from_climbs": [
+    "climb-t2-vllm",
+    "climb-t2-sglang"
+   ]
+  },
+  {
+   "id": "verify-t2c",
+   "type": "verify",
+   "plan": "t2cv@capacity",
+   "from_climbs": [
+    "climb-t2c-vllm",
+    "climb-t2c-sglang"
+   ]
+  },
+  {
+   "id": "steady-t2",
+   "type": "verify",
+   "plan": "t2ss@capacity",
+   "from_climbs": [
+    "climb-t2-vllm",
+    "climb-t2-sglang"
+   ]
+  },
+  {
+   "id": "steady-t2c",
+   "type": "verify",
+   "plan": "t2css@capacity",
+   "from_climbs": [
+    "climb-t2c-vllm",
+    "climb-t2c-sglang"
+   ]
+  },
+  {
+   "id": "verify-quality",
+   "type": "verify",
+   "plan": "quality2",
+   "from_climbs": [
+    "climb-t1n-vllm",
+    "climb-t1n-sglang",
+    "climb-t2-vllm",
+    "climb-t2-sglang",
+    "climb-t2c-vllm",
+    "climb-t2c-sglang"
+   ]
+  },
+  {
+   "id": "profile",
+   "type": "verify",
+   "plan": "profile",
+   "from_climbs": [
+    "climb-t1n-vllm"
+   ],
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    }
+   ]
+  },
+  {
+   "id": "cross-t1",
+   "type": "verify",
+   "plan": "t1n",
+   "reuse": true,
+   "from_climbs": [
+    "climb-t2-vllm",
+    "climb-t2-sglang",
+    "climb-t2c-vllm",
+    "climb-t2c-sglang",
+    "climb-t3-vllm-offload",
+    "climb-t3-sglang"
+   ]
+  },
+  {
+   "id": "cross-t2c",
+   "type": "verify",
+   "plan": "t2c",
+   "reuse": true,
+   "from_climbs": [
+    "climb-t1n-vllm",
+    "climb-t1n-sglang"
+   ]
+  },
+  {
+   "id": "cross-t2c-sglang-mem88",
+   "type": "verify",
+   "plan": "t2c",
+   "repeat": 2,
+   "from_climbs": [
+    "climb-t1n-sglang"
+   ],
+   "override": {
+    "mem_fraction_static": 0.88
+   }
+  },
+  {
+   "id": "both-t1",
+   "type": "verify",
+   "plan": "t1n",
+   "reuse": true,
+   "from_climbs": [
+    "climb-t2c-vllm"
+   ],
+   "graft": {
+    "climb": "climb-t1n-vllm",
+    "knobs": [
+     "spec",
+     "spec_k"
+    ]
+   },
+   "override": {
+    "spec_schedule": "cutoff"
+   }
+  },
+  {
+   "id": "both-t2c",
+   "type": "verify",
+   "plan": "t2c",
+   "reuse": true,
+   "from_climbs": [
+    "climb-t2c-vllm",
+    "climb-t1n-vllm"
+   ],
+   "graft": {
+    "climb": "climb-t1n-vllm",
+    "knobs": [
+     "spec",
+     "spec_k"
+    ]
+   },
+   "override": {
+    "spec_schedule": "cutoff"
+   }
+  },
+  {
+   "id": "both-quality",
+   "type": "verify",
+   "plan": "quality2",
+   "reuse": true,
+   "from_climbs": [
+    "climb-t2c-vllm"
+   ],
+   "graft": {
+    "climb": "climb-t1n-vllm",
+    "knobs": [
+     "spec",
+     "spec_k"
+    ]
+   },
+   "override": {
+    "spec_schedule": "cutoff"
+   }
+  },
+  {
+   "id": "baseline-t2c",
+   "type": "batch",
+   "plan": "t2c",
+   "reuse": true,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "sglang",
+     "variant": "bf16"
+    }
+   ]
+  },
+  {
+   "id": "baseline-t3",
+   "type": "batch",
+   "plan": "t3",
+   "reuse": true,
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "bf16"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int4"
+    },
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8"
+    }
+   ]
+  },
+  {
+   "id": "ablation-t1n-vllm",
+   "type": "ablation",
+   "climb": "climb-t1n-vllm",
+   "track": "t1n"
+  },
+  {
+   "id": "ablation-t2-vllm",
+   "type": "ablation",
+   "climb": "climb-t2-vllm",
+   "track": "t2"
+  },
+  {
+   "id": "ablation-t2c-vllm",
+   "type": "ablation",
+   "climb": "climb-t2c-vllm",
+   "track": "t2c"
+  },
+  {
+   "id": "ablation-t1n-sglang",
+   "type": "ablation",
+   "climb": "climb-t1n-sglang",
+   "track": "t1n"
+  },
+  {
+   "id": "ablation-t2-sglang",
+   "type": "ablation",
+   "climb": "climb-t2-sglang",
+   "track": "t2"
+  },
+  {
+   "id": "ablation-t2c-sglang",
+   "type": "ablation",
+   "climb": "climb-t2c-sglang",
+   "track": "t2c"
+  },
+  {
+   "id": "ablation-t3-vllm",
+   "type": "ablation",
+   "climb": "climb-t3-vllm-offload",
+   "track": "t3",
+   "start_climb": "climb-t3-vllm"
+  },
+  {
+   "id": "ablation-t3-sglang",
+   "type": "ablation",
+   "climb": "climb-t3-sglang",
+   "track": "t3"
+  },
+  {
+   "id": "steady-t2c-cap256",
+   "type": "verify",
+   "plan": "t2css@capacity",
+   "configs": [
+    {
+     "engine": "vllm",
+     "variant": "int8w8a8",
+     "kv_cache_dtype": "fp8"
+    }
+   ]
+  }
+ ]
+}

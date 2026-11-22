@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-models-__IDX__
+  namespace: default
+  labels: {app: download-models, app.kubernetes.io/part-of: a100-hillclimb}
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels: {app: download-models}
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: __NODE__
+      containers:
+        - name: dl
+          image: __REGISTRY__/vllm/vllm-openai:v0.34.0
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              export HF_HOME=/models/.hf-home HF_HUB_DISABLE_TELEMETRY=1
+              python3 - <<'PY'
+              import os, time
+              from concurrent.futures import ThreadPoolExecutor
+              from huggingface_hub import snapshot_download, HfApi
+              specs = """Nanbeige/Nanbeige4.3-33B@df919e1e2cf077a22204c78b6c826bf3db18bc08 Nanbeige/Nanbeige4.3-33B-FP8@0b1acaa19bae10fec482600ada7c9defcb7c4884 Nanbeige/Nanbeige4.3-33B-INT8@879049b69c5f64384f3067095924b63e9125e84f Nanbeige/Nanbeige4.3-33B-INT4@d834b414cf1c47e42640de33c147b7cf8a9321ef ProCreations/Nanbeige4.3-33B-DFlash2@22a73c4d099e61a34b6a26251b0a3a98a7b41746""".split()
+              api = HfApi()
+              def fetch(spec):
+                  repo, rev = spec.split("@")
+                  dst = "/models/" + repo.split("/")[1]
+                  t = time.time()
+                  snapshot_download(repo_id=repo, revision=rev, local_dir=dst, max_workers=8,
+                                    ignore_patterns=["figures/*", "*.png", ".eval_results/*"])
+                  bad = []
+                  for f in api.list_repo_tree(repo, revision=rev, recursive=True, expand=False):
+                      if getattr(f, "size", None) and f.path.endswith(".safetensors"):
+                          p = os.path.join(dst, f.path)
+                          if not os.path.exists(p) or os.path.getsize(p) != f.size: bad.append(f.path)
+                  gb = sum(os.path.getsize(os.path.join(r, x)) for r, _, fs in os.walk(dst) for x in fs) / 1e9
+                  return f"{repo}@{rev[:10]}: {gb:.1f} GB in {time.time()-t:.0f}s, size mismatches={bad}"
+              with ThreadPoolExecutor(max_workers=3) as ex:
+                  for line in ex.map(fetch, specs):
+                      print(line, flush=True)
+              PY
+              echo "ALL DONE on $(hostname)"; df -h /models | tail -1
+          env:
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          resources:
+            requests: {cpu: "4", memory: 8Gi}
+            limits: {memory: 16Gi}
+          volumeMounts:
+            - {name: models, mountPath: /models}
+      volumes:
+        - name: models
+          hostPath: {path: /mnt/nvme/hf, type: Directory}

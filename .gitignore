@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+results/trials/*/server.log
+results/trials/*/server.head.log
+results/trials/*/step*.server.json
+results/trials/*/pod.json
+results-cluster/
+# Environment-specific names (cluster, nodes, registry, subscription); template: .env.example
+.env
